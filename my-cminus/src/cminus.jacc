@@ -1,5 +1,5 @@
 // cminus.jacc - parser for C-Minus programming language.
-// Author: Your Name
+// Author: Jeremy Mastrodomenico
 // Date: the date
 
 %{
