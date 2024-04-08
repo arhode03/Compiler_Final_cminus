@@ -61,12 +61,28 @@ whitespace     = [\s]+
 
 "<="				{ yyparser.yylval = new ParserVal(LTE); return LTE; }
 
-"+"					{ yyparser.yylval = new ParserVal(ADDOP); return ADDOP; }
+"+"					{ yyparser.yylval = new ParserVal(ADDOP); return ADDOP; } //do we do all operators like this??
 
 "="					{ return ASSIGN; }
 
 "("					{ return LPAREN; }
 ")"					{ return RPAREN; }
+"["					{ return RBRACK; }
+"]"					{ return LBRACK; }
+"{"					{ return RBRACE; }
+"}"					{ return LBRACE; }
+";"					{ return SEMI; }
+
+"int" 				{ return INT; }
+//"boolean" 			{ return BOOLEAN; }
+"return" 			{ return RETURN; }
+"if" 				{ return IF; }
+"else" 				{ return ELSE; }
+"while" 			{ return WHILE; }
+//'"System.out.println" { return PRINTLN; }
+
+
+
 
 {identifier}		{ String identifier = yytext();
 					  yyparser.yylval = new ParserVal(identifier);
