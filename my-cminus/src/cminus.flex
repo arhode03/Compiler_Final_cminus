@@ -95,10 +95,6 @@ whitespace     = [\s]+
 ";"					{ return SEMI; }
 
 
-//these are from the last lab in case if we needed them 
-//"boolean" 		{ return BOOLEAN; }
-//'"System.out.println" { return PRINTLN; }
-
 
 
 "//".*"\n"         {/* ignore single line comments */}
