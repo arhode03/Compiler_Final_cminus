@@ -74,12 +74,12 @@ whitespace     = [\s]+
 ";"					{ return SEMI; }
 
 "int" 				{ return INT; }
-//"boolean" 			{ return BOOLEAN; }
+"boolean" 			{ return BOOLEAN; }
 "return" 			{ return RETURN; }
 "if" 				{ return IF; }
 "else" 				{ return ELSE; }
 "while" 			{ return WHILE; }
-//'"System.out.println" { return PRINTLN; }
+"System.out.println" { return PRINTLN; }
 
 
 
