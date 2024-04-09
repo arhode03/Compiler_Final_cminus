@@ -18,11 +18,8 @@ import java.util.*;
 
 
 
-
-
-
 // Constants for all recognized tokens
-%token INPUT PRINT RETURN WHILE IF ELSE VOID INT
+%token INPUT PRINTLN RETURN WHILE IF ELSE VOID INT
 %token IDENTIFIER NUMBER
 %token LTE LT GT GTE EQ NOTEQ
 %token ADDOP SUBOP MULOP DIVOP ASSIGN COMMA SEMI 
