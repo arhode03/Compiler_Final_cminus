@@ -19,7 +19,7 @@ import java.util.*;
 
 
 // Constants for all recognized tokens
-%token INPUT PRINTLN RETURN WHILE IF ELSE VOID INT
+%token INPUT PRINT RETURN WHILE IF ELSE VOID INT
 %token IDENTIFIER NUMBER
 %token LTE LT GT GTE EQ NOTEQ
 %token ADDOP SUBOP MULOP DIVOP ASSIGN COMMA SEMI 
@@ -35,7 +35,7 @@ import java.util.*;
 
 %%
 
-program: program_start declaration_list
+program: program_start 
 		{
 			// CODEGEN if input instruction, generate read code
 			// CODEGEN generate the class constructor
@@ -51,6 +51,10 @@ program_start:
 			// CODEGEN generate prolog
 		}
 	;
+
+declaration_list: var_declaration
+		   | fun_declaration
+		   ;
 	
 
 var_declaration: type_specifier IDENTIFIER SEMI
@@ -223,6 +227,33 @@ compound_stmt_start:
 		}
 	;
 
+local_declarations: local_declarations var_declaration
+				  | /* empty */
+				  ;
+
+statement_list: statement_list statement
+			  | /* empty*/
+			  ;
+
+statement: assign_stmt
+		 | compound_stmt
+		 | selection_stmt
+		 | iteration_stmt
+		 | return_stmt
+		 | print_stmt
+		 | input_stmt
+		 | call_stmt
+		 | COMMA
+		 ;
+		 
+call_stmt: call SEMI
+		 ;
+		 
+assign_stmt: var_assign_stmt |
+		    arr_assign_stmt
+		   ;
+		   
+
 
 
 var_assign_stmt: IDENTIFIER ASSIGN expression SEMI
@@ -368,6 +399,14 @@ expression:	additive_expression relop additive_expression
 		}
 		|	additive_expression
 	;
+	
+relop: LTE
+	 | LT
+	 | GTE
+	 | GT
+	 | EQ
+	 | NOTEQ
+	 ;
 
 
 additive_expression: additive_expression addop term
@@ -444,6 +483,13 @@ call:		IDENTIFIER LPAREN args RPAREN
 		}
 	;
 
+args: arg_list
+	| /* empty */
+	;
+	
+arg_list: arg_list COMMA expression
+		| expression
+		;
 ///////////// JUST SO THE PARSER WILL BUILD, GET RID OF THESE!
 args: ;
 declaration_list: ;

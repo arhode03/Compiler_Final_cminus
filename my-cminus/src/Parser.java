@@ -1,4 +1,4 @@
-// Output created by jacc on Tue Apr 09 13:32:06 EDT 2024
+// Output created by jacc on Tue Apr 09 14:07:14 EDT 2024
 
 
 import java.io.*;
@@ -29,13 +29,13 @@ class Parser implements ParserTokens {
                     if (++yysp>=yyst.length) {
                         yyexpand();
                     }
-                case 4:
+                case 3:
                     switch (yytok) {
                         case ENDINPUT:
                             yyn = yyr2();
                             continue;
                     }
-                    yyn = 11;
+                    yyn = 9;
                     continue;
 
                 case 1:
@@ -43,13 +43,13 @@ class Parser implements ParserTokens {
                     if (++yysp>=yyst.length) {
                         yyexpand();
                     }
-                case 5:
+                case 4:
                     switch (yytok) {
                         case ENDINPUT:
-                            yyn = 8;
+                            yyn = 6;
                             continue;
                     }
-                    yyn = 11;
+                    yyn = 9;
                     continue;
 
                 case 2:
@@ -57,36 +57,22 @@ class Parser implements ParserTokens {
                     if (++yysp>=yyst.length) {
                         yyexpand();
                     }
-                case 6:
-                    switch (yytok) {
-                        case ENDINPUT:
-                            yyn = yyr52();
-                            continue;
-                    }
-                    yyn = 11;
-                    continue;
-
-                case 3:
-                    yyst[yysp] = 3;
-                    if (++yysp>=yyst.length) {
-                        yyexpand();
-                    }
-                case 7:
+                case 5:
                     switch (yytok) {
                         case ENDINPUT:
                             yyn = yyr1();
                             continue;
                     }
-                    yyn = 11;
+                    yyn = 9;
                     continue;
 
-                case 8:
+                case 6:
                     return true;
-                case 9:
+                case 7:
                     yyerror("stack overflow");
-                case 10:
+                case 8:
                     return false;
-                case 11:
+                case 9:
                     yyerror("syntax error");
                     return false;
             }
@@ -104,7 +90,7 @@ class Parser implements ParserTokens {
         yysv = newyysv;
     }
 
-    private int yyr1() { // program : program_start declaration_list
+    private int yyr1() { // program : program_start
         {
                         // CODEGEN if input instruction, generate read code
                         // CODEGEN generate the class constructor
@@ -112,12 +98,8 @@ class Parser implements ParserTokens {
                         // SYMTAB exit scope
                         // SEMANTIC if no main function, report semantic error 
                 }
-        yysv[yysp-=2] = yyrv;
+        yysv[yysp-=1] = yyrv;
         return 1;
-    }
-
-    private int yyr52() { // declaration_list : /* empty */
-        return 3;
     }
 
     private int yyr2() { // program_start : /* empty */
