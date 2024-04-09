@@ -1,6 +1,6 @@
 // cminus.jacc - parser for C-Minus programming language.
 // Author: Jeremy Mastrodomenico Alex Rhodes Jack Pollackov 
-// Date: the date
+// Date: 4/09/24
 
 %{
 import java.io.*;
@@ -15,10 +15,17 @@ import java.util.*;
 %next		yylex()
 %start		program
 
+
+
+
+
+
+
 // Constants for all recognized tokens
 %token INPUT PRINT RETURN WHILE IF ELSE VOID INT
 %token IDENTIFIER NUMBER
-%token LTE ADDOP SUBOP MULOP DIVOP ASSIGN COMMA SEMI
+%token LTE LT GT GTE EQ NOTEQ
+%token ADDOP SUBOP MULOP DIVOP ASSIGN COMMA SEMI 
 %token LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE
 %token UNKNOWN
 /* ENDINPUT generated automatically by jacc */

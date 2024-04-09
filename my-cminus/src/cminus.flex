@@ -56,30 +56,54 @@ whitespace     = [\s]+
 
 %%
 
+
+
 "else"				{ return ELSE; }
 "void"				{ yyparser.yylval = new ParserVal(VOID); return VOID; }
-
-"<="				{ yyparser.yylval = new ParserVal(LTE); return LTE; }
-
-"+"					{ yyparser.yylval = new ParserVal(ADDOP); return ADDOP; } //do we do all operators like this??
-
-"="					{ return ASSIGN; }
-
-"("					{ return LPAREN; }
-")"					{ return RPAREN; }
-"["					{ return RBRACK; }
-"]"					{ return LBRACK; }
-"{"					{ return RBRACE; }
-"}"					{ return LBRACE; }
-";"					{ return SEMI; }
-
-"int" 				{ return INT; }
-//"boolean" 			{ return BOOLEAN; }
-"return" 			{ return RETURN; }
+"int"				{ yyparser.yylval = new ParserVal(INT); return INT; }
 "if" 				{ return IF; }
 "else" 				{ return ELSE; }
 "while" 			{ return WHILE; }
+"return" 			{ return RETURN; }
+"input" 			{ return INPUT; }
+"print" 			{ return PRINT; }
+
+"<="			{ yyparser.yylval = new ParserVal(LTE); return LTE; }
+"<"				{ yyparser.yylval = new ParserVal(LT); return LT; }
+">="			{ yyparser.yylval = new ParserVal(GTE); return GTE; }
+">"				{ yyparser.yylval = new ParserVal(GT); return GT; }
+"!="			{ yyparser.yylval = new ParserVal(NOTEQ); return NOTEQ; }
+"=="			{ yyparser.yylval = new ParserVal(EQ); return EQ; }
+
+
+"+"					{ yyparser.yylval = new ParserVal(ADDOP); return ADDOP; } 
+"-"					{ yyparser.yylval = new ParserVal(SUBOP); return SUBOP; } 
+"*"					{ yyparser.yylval = new ParserVal(MULOP); return MULOP; } 
+"/"					{ yyparser.yylval = new ParserVal(DIVOP); return DIVOP; } 
+
+
+"="					{ return ASSIGN; }
+";"					{ return SEMI; }
+","					{ return COMMA; }
+
+"("					{ return LPAREN; }
+")"					{ return RPAREN; }
+"["					{ return LBRACK; }
+"]"					{ return RBRACK; }
+"{"					{ return LBRACE; }
+"}"					{ return RBRACE; }
+";"					{ return SEMI; }
+
+
+//these are from the last lab in case if we needed them 
+//"boolean" 		{ return BOOLEAN; }
 //'"System.out.println" { return PRINTLN; }
+
+
+
+"//".*"\n"         {/* ignore single line comments */}
+"//".*         {/* ignore single line comments */}
+"/\*".*"\*\/"      {/* ignore multi-line comments */}
 
 
 
