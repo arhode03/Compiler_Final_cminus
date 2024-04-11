@@ -103,7 +103,9 @@ whitespace     = [\s]+
 
 
 
-
+{integer} 			{ int value = Integer.parseInt(yytext());
+					yyparser.yylval = new ParserVal(value);
+					return NUMBER;}
 {identifier}		{ String identifier = yytext();
 					  yyparser.yylval = new ParserVal(identifier);
 					  return IDENTIFIER; }

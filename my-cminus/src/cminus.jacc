@@ -1,5 +1,5 @@
 // cminus.jacc - parser for C-Minus programming language.
-// Author: Jeremy Mastrodomenico Alex Rhodes Jack Pollackov 
+// Author: Jeremy Mastrodomenico, Alex Rhodes, Jack Pollackov 
 // Date: 4/09/24
 
 %{
@@ -41,6 +41,8 @@ program: program_start
 			// CODEGEN generate the class constructor
 			// CODEGEN generate the epilog
 			// SYMTAB exit scope
+			//SymTab.exitScope();
+			
 			// SEMANTIC if no main function, report semantic error 
 		}
 	;
@@ -48,6 +50,8 @@ program: program_start
 program_start:
 		{
 			// SYMTAB enter scope
+			//SymTab.enterScope();
+			
 			// CODEGEN generate prolog
 		}
 	;
@@ -60,25 +64,58 @@ declaration_list: var_declaration
 var_declaration: type_specifier IDENTIFIER SEMI
 		{
 			// SYMTAB get type and name
+			int vartype = $1.ival;
+			String name = $2.sval;
+			
 			
 			// SYMTAB lookup name in table, semantic error if already present, redeclaration
+			if (SymTab.lookup(name))
+			{
+				semerror("Redeclaration of name " + name + "in current scope");
+			}
 			
 			// SEMANTIC else if type is void, semantic error, invalid type
-			
+			else if (vartype == VOID)
+			{
+				semerror("Variable " + name + " cannot be of type void");
+			}
+			else
+			{
 			// SYMTAB got here, so ok, create variable record, insert in symbol table
+			VarRec rec = new VarRec(name, SymTab.getscope(), vartype);
+			SymTab.insert(name, rec);
+			
 			// CODEGEN and also generate static variable declaration of scope is global (0)
+			}
+			
 		}
 		| type_specifier IDENTIFIER LBRACK NUMBER RBRACK SEMI
 		{
 			// SYMTAB get type, name, array length
+			int vartype = $1.ival;
+			String name = $2.sval;
+			int arrlen = $4.ival;
+			System.out.println(vartype + "," + name + "," + arrlen);
 			
 			// SYMTAB lookup name in table, semantic error if already present, redeclaration
+			if (SymTab.lookup(name))
+			{
+				semerror("Redeclaration of array name " + name + "in current scope");
+			}
 			
 			// SEMANTIC else if type is void, semantic error, invalid type
+			else if (vartype == VOID)
+			{
+				semerror("Array Variable " + name + " cannot be of type void");
+			}
+			else
+			{
+			// SYMTAB got here, so ok, create array record, insert in symbol table
+			ArrRec rec = new ArrRec(name, SymTab.getscope(), vartype, arrlen);
+			SymTab.insert(name, rec);
 			
-			// SYMTAB got here, so ok, create variable record, insert in symbol table
 			// CODEGEN and also generate static variable declaration of scope is global (0)
-			// CODEGEN or if not global, generate array init for local variable
+		}
 		}
 	;
 
@@ -104,18 +141,36 @@ fun_name: type_specifier IDENTIFIER
 			returnTypes.push(rettype);
 			functionNames.push(name);
 
-			// SYMTAB create a function record
+			// SYMTAB create a function record add params later
+			FunRec rec = new FunRec(name, symtab.getscope(), rettype, null);
 
 			// SYMTAB lookup function name in symbol table
 			// SEMANTIC if name already in table, redeclaration error
+			if (symtab.lookup(name))
+			{
+				semerror("Redeclaration of name " + name + " in current scope");
+			}
+			else if (!seenmain)
+			{
 			
-			// SEMANTIC else if we haven't yet seen a main function
-			// SEMANTIC then add it to the symbol table, set its jvm number to 0 (for new function)
-			// SEMANTIC and if it is "main" the remember it (seenMain) and set
-			// SEMANTIC its jvm number to 1 (for main)
-
-			// SEMANTIC else the function is declared after main, error
-
+				// SEMANTIC else if we haven't yet seen a main function
+				// SEMANTIC then add it to the symbol table, set its jvm number to 0 (for new function)
+				symtab.insert(name, rec);
+				rec.setJVMNum(0);
+				
+				// SEMANTIC and if it is "main" the remember it (seenMain) and set
+				// SEMANTIC its jvm number to 1 (for main)
+				if(name.equals("main"))
+				{
+					seenMain = true;
+					rec.setJVMNum(1);
+					
+				}
+			}
+			else{
+			     // SEMANTIC else the function is declared after main, error
+			     semerror("Function " + name + " declared after main"); 
+			}
 			// Remember the function record for later use
 			symTabRecs.push(rec);
 
@@ -141,10 +196,22 @@ fun_params:  LPAREN params RPAREN
 			rec.setParams(paramList);
 			
 			// Perform some semantic checks on the function
-			// SEMANTIC if name is "main"
-			// SEMANTIC and its return type is not VOID, has to be void
-			// SEMANTIC if its parameter list is null, can't be empty
-
+			if (name.equals("main"))
+			{
+			
+				// SEMANTIC if name is "main"
+				// SEMANTIC and its return type is not VOID, has to be void
+				if(rettype != VOID)
+				{
+					semerror("Return type of main must be void");
+				}
+				// SEMANTIC if its parameter list is null, must be empty
+				if(parmList != null)
+				{
+					semerror("Params of main must be void or empty");
+				}
+			}
+			
 			// CODEGEN generate function beginning
 		}
 	;
@@ -159,42 +226,64 @@ param_list:	param_list COMMA param
 			// Get the parameter list from item 1 in grammar rule
 			@SuppressWarnings("unchecked")
 			// SYMTAB $1 has the object that is a List<SymTabRec>
+			List<SymTabRec> paramList = (List<SymTabRec>)$1.obj;
 			
 			// Get the parameter from item 3 in the grammar rule
 			// SYMTAB $3 has the object that is a SymTabRec
+			SymTabRec rec = (SymTabRec)$3.obj;
 			
 			// Add the parameter to the parameter list
 			// SYMTAB add the param to the param_list (variable)
+			paramList.add(rec);
 			
 			// Return the value
 			// SYMTAB return the param_list as a ParserVal to return value $$
+			$$ = new ParserVal(paramList);
 		}
 		|	param
 		{
 			// SYMTAB create an empty List<SymTabRec>
+			List<SymTabrec> paramList = new ArrayList<SymTabRec>();
+			
 			// SYMTAB get $1 object as a SymTabRec
+			SymTabRec rec = (SymTabRec)$1.obj;
 			// SYMTAB add the param rec to the list
+			paramList.add(rec);
 			// SYMTAB return the list as a ParserVal to return value $$
+			$$ = new ParserVal(paramList);
 		}
 	;
 
 param:		type_specifier IDENTIFIER 
 		{
 			// SYMTAB get the type and name
+			int varType = $1.ival;
+			String name = $2.sval;
+			
 
 			// SYMTAB create a VarRec
+			VarRec rec = new VarRec(name, symtab.getScope(), varType);
 
 			// SYMTAB lookup the name in the symbol table
 			// SYMTAB if already in table, redeclaration error
+			if(symtab.lookup(name))
+			{
+				semerror("Redeclaration of param name " + name + " in current scope');
+			}
+			else{
+			}
 
 			// SYMTAB else insert it into the symbol table
 			
 			// SYMTAB return it as a ParserVal via $$ return value
+			$$ = new Parserval(rec);
 		}
 		|	type_specifier IDENTIFIER LBRACK RBRACK
 		{
 			// SYMTAB get the type and name
-
+			int varType = $1.ival;
+			String name = $2.sval;
+			//start watching video here he went too fast to keep up kinda insane 
 			// SYMTAB create a VarRec (with -1 size as placeholder)
 
 			// SYMTAB lookup in symbol table
