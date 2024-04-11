@@ -41,7 +41,7 @@ program: program_start
 			// CODEGEN generate the class constructor
 			// CODEGEN generate the epilog
 			// SYMTAB exit scope
-			//SymTab.exitScope();
+			symtab.exitScope();
 			
 			// SEMANTIC if no main function, report semantic error 
 		}
@@ -50,7 +50,7 @@ program: program_start
 program_start:
 		{
 			// SYMTAB enter scope
-			//SymTab.enterScope();
+			symtab.enterScope();
 			
 			// CODEGEN generate prolog
 		}
@@ -285,19 +285,27 @@ param:		type_specifier IDENTIFIER
 			String name = $2.sval;
 			//start watching video here he went too fast to keep up kinda insane 
 			// SYMTAB create a VarRec (with -1 size as placeholder)
-
+			ArrRec rec = new ArrRec(name, symtab.getScope(), vartype, -1);
 			// SYMTAB lookup in symbol table
 			// SYMTAB if already in table, redeclaration error
-			
+			if(symtab.lookup(name))
+			{
+				semerror("Redeclar of " + name + " as a parm in current scope ");
+			}
+			else {
+				symtab.insert(name, rec);
+			}
 			// SYMTAB else insert it into the table
 			
 			// SYMTAB return it as a ParserVal via $$ return value
+			$$ = new ParserVal(rec);
 		}
 	;
 
 compound_stmt: compound_stmt_start LBRACE local_declarations statement_list RBRACE
 		{
 			// SYMTAB exit scope
+			symtab.exitScope();
 		}
 	;
 
@@ -312,6 +320,7 @@ compound_stmt_start:
 			else
 			{
 				// SYMTAB enter scope
+				symtab.enterScope();
 			}
 		}
 	;

@@ -1,4 +1,4 @@
-// Output created by jacc on Thu Apr 11 14:10:43 EDT 2024
+// Output created by jacc on Thu Apr 11 18:00:28 EDT 2024
 
 
 import java.io.*;
@@ -96,7 +96,7 @@ class Parser implements ParserTokens {
                         // CODEGEN generate the class constructor
                         // CODEGEN generate the epilog
                         // SYMTAB exit scope
-                        //SymTab.exitScope();
+                        symtab.exitScope();
                         
                         // SEMANTIC if no main function, report semantic error 
                 }
@@ -107,7 +107,7 @@ class Parser implements ParserTokens {
     private int yyr2() { // program_start : /* empty */
         {
                         // SYMTAB enter scope
-                        //SymTab.enterScope();
+                        symtab.enterScope();
                         
                         // CODEGEN generate prolog
                 }
