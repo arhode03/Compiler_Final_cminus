@@ -11,7 +11,7 @@ public class ParseMain
 	// Set these to produce various output. For code generation,
 	// only set CODE_GEN_OUTPUT to true, everything else to false.
 	public static boolean PARSE_OUTPUT = true; // true for Part 1 evaluation, false for Part 2
-	public static boolean SYMBOL_TABLE_OUTPUT = false; // true for Part 1 evaluation, false for Part 2
+	public static boolean SYMBOL_TABLE_OUTPUT = true; // true for Part 1 evaluation, false for Part 2
 	public static boolean CODE_GEN_OUTPUT = false; // false for Part 1 evaluation, true for Part 2
 	
 	public ParseMain(String[] args) throws IOException

@@ -1,4 +1,4 @@
-// Output created by jacc on Thu Apr 11 18:00:28 EDT 2024
+// Output created by jacc on Tue Apr 16 14:04:06 EDT 2024
 
 
 import java.io.*;
@@ -99,6 +99,10 @@ class Parser implements ParserTokens {
                         symtab.exitScope();
                         
                         // SEMANTIC if no main function, report semantic error 
+                        if (!seenMain)
+                        {
+                                semerror("no main in file");
+                        }
                 }
         yysv[yysp-=1] = yyrv;
         return 1;
@@ -169,7 +173,11 @@ private int yylex()
 /* syntax errors */
 public void yyerror (String error)
 {
-    System.err.println("Parse Error : " + error);
+        int line = lexer.getLine() + 1; //normalize 0 to 1
+        int col = lexer.getCol() + 1; 
+        String token = lexer.yytext();
+        
+    System.err.println("Parse Error : " + error + " at line " + line + " column " + col +". Got: " + token);
 }
 
 /* semantic errors */
@@ -177,7 +185,9 @@ public void semerror (String error)
 {
         if (ParseMain.SYMBOL_TABLE_OUTPUT)
         {
-        System.err.println("Semantic Error : " + error);
+                int line = lexer.getLine() + 1; //normalize 0 to 1
+                int col = lexer.getCol() + 1;
+        System.err.println("Semantic Error : " + error + " at line " + line + " column " + col);
         }
 }
 
