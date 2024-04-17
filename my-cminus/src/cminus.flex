@@ -1,6 +1,7 @@
-/* cminus.flex - scanner for C-Minus programming language. */
-/* Author: Your Name */
-/* Date: the date */
+// cminus.flex - parser for C-Minus programming language.
+// Author: Jeremy Mastrodomenico, Alex Rhodes, Jack Pollackov 
+// Date: 4/09/24
+
 
 %%
 
@@ -54,63 +55,57 @@ identifier = ({letter})({letter}|{digit}|"_")*
 newline = \r|\n|\r\n
 whitespace     = [\s]+
 
+linecomment = "//".*{newline}
+multicomment ="/*"((\*+[^/*]) | ([^*]))*\**"*/"
+
 %%
 
 
 
 "else"				{ return ELSE; }
+"if"                { return IF; }
+"int"               { yyparser.yylval = new ParserVal(INT); return INT; }
+"return"            { return RETURN; }
 "void"				{ yyparser.yylval = new ParserVal(VOID); return VOID; }
-"int"				{ yyparser.yylval = new ParserVal(INT); return INT; }
-"if" 				{ return IF; }
-"else" 				{ return ELSE; }
-"while" 			{ return WHILE; }
-"return" 			{ return RETURN; }
-"input" 			{ return INPUT; }
-"print" 			{ return PRINT; }
+"while"             { return WHILE; }
+"print"             { return PRINT; }
+"input"             { return INPUT; }
 
-"<="			{ yyparser.yylval = new ParserVal(LTE); return LTE; }
-"<"				{ yyparser.yylval = new ParserVal(LT); return LT; }
-">="			{ yyparser.yylval = new ParserVal(GTE); return GTE; }
-">"				{ yyparser.yylval = new ParserVal(GT); return GT; }
-"!="			{ yyparser.yylval = new ParserVal(NOTEQ); return NOTEQ; }
-"=="			{ yyparser.yylval = new ParserVal(EQ); return EQ; }
+"<="				{ yyparser.yylval = new ParserVal(LTE); return LTE; }
+">="				{ yyparser.yylval = new ParserVal(GTE); return GTE; }
+"<"					{ yyparser.yylval = new ParserVal(LT); return LT; }
+">"					{ yyparser.yylval = new ParserVal(GT); return GT; }
 
 
-"+"					{ yyparser.yylval = new ParserVal(ADDOP); return ADDOP; } 
-"-"					{ yyparser.yylval = new ParserVal(SUBOP); return SUBOP; } 
-"*"					{ yyparser.yylval = new ParserVal(MULOP); return MULOP; } 
-"/"					{ yyparser.yylval = new ParserVal(DIVOP); return DIVOP; } 
-
+"+"					{ yyparser.yylval = new ParserVal(ADDOP); return ADDOP; }
+"-"					{ yyparser.yylval = new ParserVal(SUBOP); return SUBOP; }
+"*"					{ yyparser.yylval = new ParserVal(MULOP); return MULOP; }
+"/"					{ yyparser.yylval = new ParserVal(DIVOP); return DIVOP; }
 
 "="					{ return ASSIGN; }
-";"					{ return SEMI; }
-","					{ return COMMA; }
+"=="                { return EQ; }
+"!="                { return NOTEQ; }
+";"                 { return SEMI; }
+","                 { return COMMA; }
 
 "("					{ return LPAREN; }
 ")"					{ return RPAREN; }
-"["					{ return LBRACK; }
-"]"					{ return RBRACK; }
-"{"					{ return LBRACE; }
-"}"					{ return RBRACE; }
-";"					{ return SEMI; }
+"["                 { return LBRACK; }
+"]"                 { return RBRACK; }
+"{"                 { return LBRACE; }
+"}"                 { return RBRACE; }
 
 
-
-
-"//".*"\n"         {/* ignore single line comments */}
-"//".*         {/* ignore single line comments */}
-"/\*".*"\*\/"      {/* ignore multi-line comments */}
-
-
-
-{integer} 			{ int value = Integer.parseInt(yytext());
-					yyparser.yylval = new ParserVal(value);
-					return NUMBER;}
 {identifier}		{ String identifier = yytext();
 					  yyparser.yylval = new ParserVal(identifier);
 					  return IDENTIFIER; }
-
+{integer}			{ int value = Integer.parseInt(yytext());
+					  yyparser.yylval = new ParserVal(value);
+					  return NUMBER; }
 {whitespace}		{/* ignore */}
+
+{linecomment}       {/* ignore */}
+{multicomment}     {/* ignore */}
 
 <<EOF>>				{ return ENDINPUT; }
 .					{ return UNKNOWN; }

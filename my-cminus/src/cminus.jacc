@@ -2,6 +2,7 @@
 // Author: Jeremy Mastrodomenico, Alex Rhodes, Jack Pollackov 
 // Date: 4/09/24
 
+
 %{
 import java.io.*;
 import java.nio.charset.*;
@@ -15,38 +16,35 @@ import java.util.*;
 %next		yylex()
 %start		program
 
-
-
-
 // Constants for all recognized tokens
+
 %token INPUT PRINT RETURN WHILE IF ELSE VOID INT
 %token IDENTIFIER NUMBER
-%token LTE LT GT GTE EQ NOTEQ
-%token ADDOP SUBOP MULOP DIVOP ASSIGN COMMA SEMI 
+%token LT GT LTE GTE EQ NOTEQ
+%token ADDOP SUBOP MULOP DIVOP ASSIGN COMMA SEMI
 %token LPAREN RPAREN LBRACK RBRACK LBRACE RBRACE
 %token UNKNOWN
 /* ENDINPUT generated automatically by jacc */
 
 // Left associative tokens
-%left ADDOP LTE 
+%left ADDOP SUBOP MULOP DIVOP LT GT LTE GTE EQ NOTEQ IF
 
 // Right associative tokens
 %right ASSIGN ELSE
 
 %%
 
-program: program_start 
+program: program_start declaration_list
 		{
 			// CODEGEN if input instruction, generate read code
 			// CODEGEN generate the class constructor
 			// CODEGEN generate the epilog
 			// SYMTAB exit scope
 			symtab.exitScope();
-			
 			// SEMANTIC if no main function, report semantic error 
 			if (!seenMain)
 			{
-				semerror("no main in file");
+				semerror("No main in file");
 			}
 		}
 	;
@@ -55,43 +53,42 @@ program_start:
 		{
 			// SYMTAB enter scope
 			symtab.enterScope();
-			
 			// CODEGEN generate prolog
 		}
 	;
-
-declaration_list: var_declaration
-		   | fun_declaration
-		   ;
 	
+declaration_list:  declaration_list declaration 
+		| declaration
+	;
 
+declaration:  var_declaration 
+		| fun_declaration
+	;
+	
 var_declaration: type_specifier IDENTIFIER SEMI
 		{
 			// SYMTAB get type and name
 			int vartype = $1.ival;
 			String name = $2.sval;
 			
-			
 			// SYMTAB lookup name in table, semantic error if already present, redeclaration
-			if (SymTab.lookup(name))
+			if(symtab.lookup(name))
 			{
-				semerror("Redeclaration of name " + name + "in current scope");
+				
+				semerror("Redeclaration of variable " + name + " in the current scope");
 			}
-			
 			// SEMANTIC else if type is void, semantic error, invalid type
-			else if (vartype == VOID)
+			else if(vartype == VOID)
 			{
 				semerror("Variable " + name + " cannot be of type void");
 			}
 			else
 			{
 			// SYMTAB got here, so ok, create variable record, insert in symbol table
-			VarRec rec = new VarRec(name, SymTab.getscope(), vartype);
-			SymTab.insert(name, rec);
-			
+				VarRec rec = new VarRec(name, symtab.getScope(), vartype);
+				symtab.insert(name, rec);
 			// CODEGEN and also generate static variable declaration of scope is global (0)
 			}
-			
 		}
 		| type_specifier IDENTIFIER LBRACK NUMBER RBRACK SEMI
 		{
@@ -99,27 +96,27 @@ var_declaration: type_specifier IDENTIFIER SEMI
 			int vartype = $1.ival;
 			String name = $2.sval;
 			int arrlen = $4.ival;
-			System.out.println(vartype + "," + name + "," + arrlen);
+			//System.out.println(vartype + "," + name + "," + arrlen);
 			
 			// SYMTAB lookup name in table, semantic error if already present, redeclaration
-			if (SymTab.lookup(name))
+			if(symtab.lookup(name))
 			{
-				semerror("Redeclaration of array name " + name + "in current scope");
+				semerror("Redeclaration of array variable " + name + " in the current scope");
 			}
-			
 			// SEMANTIC else if type is void, semantic error, invalid type
-			else if (vartype == VOID)
+			else if(vartype == VOID)
 			{
-				semerror("Array Variable " + name + " cannot be of type void");
+				semerror("Array variable " + name + " cannot be of type void");
 			}
 			else
 			{
-			// SYMTAB got here, so ok, create array record, insert in symbol table
-			ArrRec rec = new ArrRec(name, SymTab.getscope(), vartype, arrlen);
-			SymTab.insert(name, rec);
-			
+			// SYMTAB got here, so ok, create variable record, insert in symbol table
+				ArrRec rec = new ArrRec(name, symtab.getScope(), vartype, arrlen);
+				symtab.insert(name, rec);
+				
 			// CODEGEN and also generate static variable declaration of scope is global (0)
-		}
+			// CODEGEN or if not global, generate array init for local variable
+			}
 		}
 	;
 
@@ -145,35 +142,34 @@ fun_name: type_specifier IDENTIFIER
 			returnTypes.push(rettype);
 			functionNames.push(name);
 
-			// SYMTAB create a function record add params later
-			FunRec rec = new FunRec(name, symtab.getscope(), rettype, null);
-
+			// SYMTAB create a function record
+			FunRec rec = new FunRec(name, symtab.getScope(), rettype, null);
+			
 			// SYMTAB lookup function name in symbol table
 			// SEMANTIC if name already in table, redeclaration error
 			if (symtab.lookup(name))
 			{
-				semerror("Redeclaration of name " + name + " in current scope");
+				semerror("Redeclaration of name " + name + " in the current scope");
 			}
-			else if (!seenmain)
+			// SEMANTIC else if we haven't yet seen a main function
+			else if(!seenMain)
 			{
-			
-				// SEMANTIC else if we haven't yet seen a main function
-				// SEMANTIC then add it to the symbol table, set its jvm number to 0 (for new function)
+			// SEMANTIC then add it to the symbol table, set its jvm number to 0 (for new function)
 				symtab.insert(name, rec);
 				rec.setJVMNum(0);
-				
-				// SEMANTIC and if it is "main" the remember it (seenMain) and set
-				// SEMANTIC its jvm number to 1 (for main)
+			// SEMANTIC and if it is "main" then remember it (seenMain) and set
+			// SEMANTIC its jvm number to 1 (for main)
 				if(name.equals("main"))
 				{
 					seenMain = true;
 					rec.setJVMNum(1);
-					
 				}
 			}
-			else{
-			     // SEMANTIC else the function is declared after main, error
-			     semerror("Function " + name + " declared after main"); 
+			
+			else
+			{
+			// SEMANTIC else the function is declared after main, error
+				semerror("Function " + name + " declared after main");
 			}
 			// Remember the function record for later use
 			symTabRecs.push(rec);
@@ -200,23 +196,21 @@ fun_params:  LPAREN params RPAREN
 			rec.setParams(paramList);
 			
 			// Perform some semantic checks on the function
-			if (name.equals("main"))
+			// SEMANTIC if name is "main"
+			if(name.equals("main"))
 			{
-			
-				// SEMANTIC if name is "main"
-				// SEMANTIC and its return type is not VOID, has to be void
-				if(rettype != VOID)
-				{
-					semerror("Return type of main must be void");
-				}
-				// SEMANTIC if its parameter list is null, must be empty
-				if(parmList != null)
-				{
-					semerror("Params of main must be void or empty");
-				}
+			// SEMANTIC and its return type is not VOID, has to be void
+			// SEMANTIC if its parameter list is null, can't be empty
+			if(rettype != VOID)
+			{
+				semerror("Return type of main must be void");
 			}
-			
+			if(paramList != null)
+			{
+				semerror("Params of main must be void or empty");
+			}
 			// CODEGEN generate function beginning
+			}
 		}
 	;
 
@@ -228,9 +222,10 @@ params:		param_list { $$ = $1; }
 param_list:	param_list COMMA param 
 		{
 			// Get the parameter list from item 1 in grammar rule
+			//we need to uncomment this later
 			@SuppressWarnings("unchecked")
 			// SYMTAB $1 has the object that is a List<SymTabRec>
-			List<SymTabRec> paramList = (List<SymTabRec>)$1.obj;
+			List<SymTabRec> reclist = (List<SymTabRec>)$1.obj;
 			
 			// Get the parameter from item 3 in the grammar rule
 			// SYMTAB $3 has the object that is a SymTabRec
@@ -238,73 +233,71 @@ param_list:	param_list COMMA param
 			
 			// Add the parameter to the parameter list
 			// SYMTAB add the param to the param_list (variable)
-			paramList.add(rec);
+			reclist.add(rec);
 			
 			// Return the value
 			// SYMTAB return the param_list as a ParserVal to return value $$
-			$$ = new ParserVal(paramList);
+			$$ = new ParserVal(reclist);
 		}
 		|	param
 		{
 			// SYMTAB create an empty List<SymTabRec>
-			List<SymTabrec> paramList = new ArrayList<SymTabRec>();
+			List<SymTabRec> reclist = new ArrayList<SymTabRec>();
 			
 			// SYMTAB get $1 object as a SymTabRec
 			SymTabRec rec = (SymTabRec)$1.obj;
+			
 			// SYMTAB add the param rec to the list
-			paramList.add(rec);
+			reclist.add(rec);
 			// SYMTAB return the list as a ParserVal to return value $$
-			$$ = new ParserVal(paramList);
+			$$ = new ParserVal(reclist);
 		}
 	;
 
 param:		type_specifier IDENTIFIER 
 		{
 			// SYMTAB get the type and name
-			int varType = $1.ival;
+			int vartype = $1.ival;
 			String name = $2.sval;
 			
-
 			// SYMTAB create a VarRec
-			VarRec rec = new VarRec(name, symtab.getScope(), varType);
-
+			VarRec rec = new VarRec(name, symtab.getScope(), vartype);
+			
 			// SYMTAB lookup the name in the symbol table
 			// SYMTAB if already in table, redeclaration error
 			if(symtab.lookup(name))
 			{
-				semerror("Redeclaration of param name " + name + " in current scope');
+				semerror("Redeclaration of " + name + " as a param in current scope");
 			}
-			else{
-			}
-
 			// SYMTAB else insert it into the symbol table
+			else
+			{
+				symtab.insert(name, rec);
+			}
 			
 			// SYMTAB return it as a ParserVal via $$ return value
-			$$ = new Parserval(rec);
 		}
 		|	type_specifier IDENTIFIER LBRACK RBRACK
 		{
 			// SYMTAB get the type and name
-			int varType = $1.ival;
+			int vartype = $1.ival;
 			String name = $2.sval;
 			
-			// SYMTAB create a VarRec (with -1 size as placeholder)
+			// SYMTAB create a ArrRec (with -1 size as placeholder)
 			ArrRec rec = new ArrRec(name, symtab.getScope(), vartype, -1);
+
 			// SYMTAB lookup in symbol table
-			
 			// SYMTAB if already in table, redeclaration error
 			if(symtab.lookup(name))
 			{
-				semerror("Redeclar of " + name + " as a parm in current scope ");
+				semerror("Redeclaration of " + name + " as a param in current scope");
 			}
-			else 
+			// SYMTAB else insert it into the table
+			else
 			{
 				symtab.insert(name, rec);
 			}
-			// SYMTAB else insert it into the table
-			
 			// SYMTAB return it as a ParserVal via $$ return value
-			$$ = new ParserVal(rec);
 		}
 	;
 
@@ -331,55 +324,74 @@ compound_stmt_start:
 		}
 	;
 
-local_declarations: local_declarations var_declaration
-				  | /* empty */
-				  ;
+local_declarations:  local_declarations var_declaration 
+		| /* empty */
+	;
 
-statement_list: statement_list statement
-			  | /* empty*/
-			  ;
+statement_list:  statement_list statement 
+		| /* empty */
+	;
 
-statement: assign_stmt
-		 | compound_stmt
-		 | selection_stmt
-		 | iteration_stmt
-		 | return_stmt
-		 | print_stmt
-		 | input_stmt
-		 | call_stmt
-		 | COMMA
-		 ;
-		 
-call_stmt: call SEMI
-		 ;
-		 
-assign_stmt: var_assign_stmt |
-		    arr_assign_stmt
-		   ;
-		   
+statement:  assign_stmt 
+		| compound_stmt 
+		| selection_stmt 
+		| iteration_stmt 
+		| return_stmt 
+		| print_stmt 
+		| input_stmt 
+		| call_stmt 
+		| SEMI
+	;
+	
+call_stmt:  call SEMI
+	;
 
+assign_stmt:  var_assign_stmt 
+		| arr_assign_stmt
+	;
 
+relop:  LTE {$$ = $1;}
+		| LT {$$ = $1;}
+		| GT {$$ = $1;}
+		| GTE {$$ = $1;}
+		| EQ {$$ = $1;}
+		| NOTEQ {$$ = $1;}
+	;
+
+addop:  ADDOP {$$ = $1;}
+		| SUBOP {$$ = $1;}
+	;
+
+term:  term mulop factor 
+		| factor
+	;
+
+mulop:  MULOP {$$ = $1;}
+		| DIVOP {$$ = $1;}
+	;
+	
 
 var_assign_stmt: IDENTIFIER ASSIGN expression SEMI
 		{
 			// SYMTAB get identifier name from item 1 in grammar rule
 			String name = $1.sval;
-			
 			// SYMTAB get the record from the symbol table
 			SymTabRec rec = symtab.get(name);
+			
 			// SYMTAB if not found (null), semantic error, undeclared
-			if (rec == null)
+			if(rec == null)
 			{
 				semerror("Undeclared name " + name + " in current scope");
 			}
 			// SYMTAB else if it isn't a regular variable, semantic error
-			else if (!rec.isVar())
+			else if(!rec.isVar())
 			{
 				semerror("Name " + name + " is not a variable in current scope");
 			}
 			// CODEGEN else ok, generate store
 			else
 			{
+				
 			}
 		}
 	;
@@ -392,24 +404,25 @@ arr_assign_stmt: arr_assign_stmt_name LBRACK expression RBRACK ASSIGN expression
 	
 arr_assign_stmt_name: IDENTIFIER
 		{
-			// SYMTAB get identifier name from item 1 in grammar rule
+			// SYMTAB get name from item 1 in rule
 			String name = $1.sval;
-			
 			// SYMTAB get the record from the symbol table
 			SymTabRec rec = symtab.get(name);
+			
 			// SYMTAB if not found (null), semantic error, undeclared
-			if (rec == null)
+			if(rec == null)
 			{
 				semerror("Undeclared name " + name + " in current scope");
 			}
-			// SYMTAB else if it isn't a regular variable, semantic error
-			else if (!rec.isArr())
+			// SYMTAB else if it isn't an array variable, semantic error
+			else if(!rec.isArr())
 			{
-				semerror("Name " + name + " is not an array variable in current scope");
+				semerror("Name " + name + " is not a variable or array in the current scope");
 			}
-			// CODEGEN else ok, generate store
+			// CODEGEN else ok, generate load array address
 			else
 			{
+				
 			}
 		}
 	;
@@ -496,24 +509,25 @@ print_stmt_start: PRINT
 
 input_stmt:	IDENTIFIER ASSIGN INPUT LPAREN RPAREN SEMI
 		{
-			// SYMTAB get identifier name from item 1 in grammar rule
+			// SYMTAB get name from item 1 of grammar rule
 			String name = $1.sval;
-			
 			// SYMTAB get the record from the symbol table
 			SymTabRec rec = symtab.get(name);
+			
 			// SYMTAB if not found (null), semantic error, undeclared
-			if (rec == null)
+			if(rec == null)
 			{
 				semerror("Undeclared name " + name + " in current scope");
 			}
 			// SYMTAB else if it isn't a regular variable, semantic error
-			else if (!rec.isVar())
+			else if(!rec.isVar())
 			{
-				semerror("Name " + name + " is not an array variable in current scope");
+				semerror("Name " + name + " is not a variable in current scope");
 			}
 			// CODEGEN else ok, set "usesRead" to true, generate read
 			else
 			{
+				
 			}
 		}
 	;
@@ -536,14 +550,6 @@ expression:	additive_expression relop additive_expression
 		}
 		|	additive_expression
 	;
-	
-relop: LTE
-	 | LT
-	 | GTE
-	 | GT
-	 | EQ
-	 | NOTEQ
-	 ;
 
 
 additive_expression: additive_expression addop term
@@ -553,49 +559,32 @@ additive_expression: additive_expression addop term
 		|	term
 	;
 
-addop:	ADDOP | SUBOP
-	;
 
-term:	term mulop factor 
-		{
-			// CODEGEN generate aritmetic oper
-		}
-		| factor
-	;
-
-mulop:	MULOP | DIVOP
-	;
 
 factor:		LPAREN expression RPAREN 
 		|	IDENTIFIER 
 		{
 			// SYMTAB get name from item 1 of rule
-			String name = $s1.sval;
+			String name = $1.sval;
 			
 			// SYMTAB get the record from the symbol table
 			SymTabRec rec = symtab.get(name);
 			
 			// SYMTAB if not found (null), semantic error, undeclared
-			if (rec == null)
+			if(rec == null)
 			{
-				semerror("Underclared name " + name + " in current scope");
+				semerror("Undeclared name " + name + " in current scope");
 			}
-			
 			// SYMTAB else if it isn't a regular variable or an array variable, semantic error, undeclared
-			else if (!rec.isVar() && !rec.isArr())
+			else if(!rec.isVar() && !rec.isArr())
 			{
 				semerror("Name " + name + " is not a variable or array in current scope");
 			}
-			
-			// CODEGEN else if it IS a regular variable, generate load var
-			else if (rec.isVar())
-			{
-			
-			}
-			// CODEGEN else (it's an array variable), generate load array address
 			else
 			{
+			// CODEGEN else if it IS a regular variable, generate load var
 			
+			// CODEGEN else (it's an array variable), generate load array address
 			}
 		}
 		| 	arr_factor
@@ -614,25 +603,26 @@ arr_factor: arr_factor_name LBRACK expression RBRACK
 
 arr_factor_name: IDENTIFIER
 		{
-			/// SYMTAB get identifier name from item 1 in grammar rule
+			// SYMTAB get name from item 1 of rule
 			String name = $1.sval;
 			
 			// SYMTAB get the record from the symbol table
 			SymTabRec rec = symtab.get(name);
+			
 			// SYMTAB if not found (null), semantic error, undeclared
-			if (rec == null)
+			if(rec == null)
 			{
 				semerror("Undeclared name " + name + " in current scope");
 			}
-			// SYMTAB else if it isn't a regular variable, semantic error
-			else if (!rec.isArr())
+			// SYMTAB else if it isn't an array variable, semantic error
+			else if(!rec.isArr())
 			{
-				semerror("Name " + name + " is not an array variable in current scope");
+				semerror("Name " + name + " is not an array in current scope");
 			}
 			// CODEGEN else ok, generate load array address
 			else
 			{
-			
+				
 			}
 		}
 	;
@@ -646,33 +636,37 @@ call:		IDENTIFIER LPAREN args RPAREN
 			SymTabRec rec = symtab.get(name);
 			
 			// SYMTAB if not found (null), semantic error, undeclared
-			if (rec == null)
+			if(rec == null)
 			{
 				semerror("Undeclared name " + name + " in current scope");
 			}
 			
 			// SYMTAB else if it isn't a function, semantic error
-			else if (!rec.isFun())
+			else if(!rec.isFun())
 			{
 				semerror("Name " + name + " is not a function in current scope");
 			}
-			
 			// CODEGEN else ok, generate function call
 			else
 			{
-			
+				
 			}
 		}
 	;
-
-args: arg_list
-	| /* empty */
-	;
 	
-arg_list: arg_list COMMA expression
+args:  arg_list
+		| /* empty */
+	;
+		
+arg_list:  arg_list COMMA expression 
 		| expression
-		;
+	;
+
+
+
+
 ///////////// JUST SO THE PARSER WILL BUILD, GET RID OF THESE!
+
 //////////////////////////////////////////////////////////////
 
 %%
@@ -727,11 +721,10 @@ private int yylex()
 /* syntax errors */
 public void yyerror (String error)
 {
-	int line = lexer.getLine() + 1; //normalize 0 to 1
-	int col = lexer.getCol() + 1; 
-	String token = lexer.yytext();
-	
-    System.err.println("Parse Error : " + error + " at line " + line + " column " + col +". Got: " + token);
+    int line = lexer.getLine()+1;
+    int col = lexer.getCol()+1;
+    String token = lexer.yytext();
+    System.err.println("Parse Error : " + error + " at line " + line + " column " + col + ". Got: " + token);
 }
 
 /* semantic errors */
@@ -739,8 +732,8 @@ public void semerror (String error)
 {
 	if (ParseMain.SYMBOL_TABLE_OUTPUT)
 	{
-		int line = lexer.getLine() + 1; //normalize 0 to 1
-		int col = lexer.getCol() + 1;
+    	int line = lexer.getLine()+1;
+    	int col = lexer.getCol()+1;
     	System.err.println("Semantic Error : " + error + " at line " + line + " column " + col);
 	}
 }
