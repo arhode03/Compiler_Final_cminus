@@ -47,6 +47,6 @@ public abstract class SymTabRec
 	public String toString()
 	{
 		return "\t\tname: " + name + "\t\tscope: " + scope + "\t\ttype: "
-			+ type;
+			+ (type + 1);
 	}
 }
