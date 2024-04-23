@@ -188,7 +188,7 @@
 	<!-- compile and run a single program  -->
 	<!-- change the value of the program property -->
 	<target name="run-one">
-		<property name="program" value="nested.c" />
+		<property name="program" value="echo.c" />
 		<echo message="Compiling and running ${program}" />
 	    <antcall target="compile-and-run">
 	        <param name="filename.c" value="${test.dir}/${program}" />

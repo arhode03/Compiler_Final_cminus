@@ -37,8 +37,14 @@ import java.util.*;
 program: program_start declaration_list
 		{
 			// CODEGEN if input instruction, generate read code
+			if(usesRead)
+			{
+				GenCode.genReadMethod();
+			}
 			// CODEGEN generate the class constructor
+			GenCode.genClassConstructor();
 			// CODEGEN generate the epilog
+			GenCode.genEpilogue(symtab);
 			// SYMTAB exit scope
 			symtab.exitScope();
 			// SEMANTIC if no main function, report semantic error 
@@ -54,6 +60,7 @@ program_start:
 			// SYMTAB enter scope
 			symtab.enterScope();
 			// CODEGEN generate prolog
+			GenCode.genPrologue();
 		}
 	;
 	
@@ -87,7 +94,12 @@ var_declaration: type_specifier IDENTIFIER SEMI
 			// SYMTAB got here, so ok, create variable record, insert in symbol table
 				VarRec rec = new VarRec(name, symtab.getScope(), vartype);
 				symtab.insert(name, rec);
-			// CODEGEN and also generate static variable declaration of scope is global (0)
+			// CODEGEN and also generate static variable declaration if scope is global (0)
+			if (symtab.getScope() == 0)
+			{
+				GenCode.genStaticDecl(rec);
+			}
+			
 			}
 		}
 		| type_specifier IDENTIFIER LBRACK NUMBER RBRACK SEMI
@@ -129,6 +141,7 @@ fun_declaration: fun_name fun_params compound_stmt
 			firstTime = true; // first time we're generating function end
 			
 			// CODEGEN generate function end
+			GenCode.genFunEnd();
 		}
 	;
 
@@ -210,6 +223,7 @@ fun_params:  LPAREN params RPAREN
 				semerror("Params of main must be void or empty");
 			}
 			// CODEGEN generate function beginning
+			GenCode.genFunBegin(rec);
 			}
 		}
 	;
@@ -391,7 +405,7 @@ var_assign_stmt: IDENTIFIER ASSIGN expression SEMI
 			// CODEGEN else ok, generate store
 			else
 			{
-				
+			GenCode.genStore(rec);	
 			}
 		}
 	;
@@ -498,12 +512,14 @@ goto_end:
 print_stmt:	print_stmt_start LPAREN expression RPAREN SEMI
 		{
 			// CODEGEN generate end print
+			GenCode.genEndPrint();
 		}
 	;
 
 print_stmt_start: PRINT
 		{
 			// CODEGEN generate begin print
+			GenCode.genBeginPrint();
 		}
 	;
 
@@ -527,7 +543,8 @@ input_stmt:	IDENTIFIER ASSIGN INPUT LPAREN RPAREN SEMI
 			// CODEGEN else ok, set "usesRead" to true, generate read
 			else
 			{
-				
+					usesRead = true;
+					GenCode.genRead(rec);
 			}
 		}
 	;
@@ -580,9 +597,10 @@ factor:		LPAREN expression RPAREN
 			{
 				semerror("Name " + name + " is not a variable or array in current scope");
 			}
-			else
+			else if (rec.isVar())
 			{
 			// CODEGEN else if it IS a regular variable, generate load var
+				GenCode.genLoadVar(rec);
 			
 			// CODEGEN else (it's an array variable), generate load array address
 			}

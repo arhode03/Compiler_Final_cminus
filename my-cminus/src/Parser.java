@@ -1,4 +1,4 @@
-// Output created by jacc on Wed Apr 17 18:15:40 EDT 2024
+// Output created by jacc on Tue Apr 23 13:57:49 EDT 2024
 
 
 import java.io.*;
@@ -2934,8 +2934,14 @@ class Parser implements ParserTokens {
     private int yyr1() { // program : program_start declaration_list
         {
                         // CODEGEN if input instruction, generate read code
+                        if(usesRead)
+                        {
+                                GenCode.genReadMethod();
+                        }
                         // CODEGEN generate the class constructor
+                        GenCode.genClassConstructor();
                         // CODEGEN generate the epilog
+                        GenCode.genEpilogue(symtab);
                         // SYMTAB exit scope
                         symtab.exitScope();
                         // SEMANTIC if no main function, report semantic error 
@@ -3211,9 +3217,10 @@ class Parser implements ParserTokens {
                         {
                                 semerror("Name " + name + " is not a variable or array in current scope");
                         }
-                        else
+                        else if (rec.isVar())
                         {
                         // CODEGEN else if it IS a regular variable, generate load var
+                                GenCode.genLoadVar(rec);
                         
                         // CODEGEN else (it's an array variable), generate load array address
                         }
@@ -3252,6 +3259,7 @@ class Parser implements ParserTokens {
                         firstTime = true; // first time we're generating function end
                         
                         // CODEGEN generate function end
+                        GenCode.genFunEnd();
                 }
         yysv[yysp-=3] = yyrv;
         return 5;
@@ -3337,6 +3345,7 @@ class Parser implements ParserTokens {
                                 semerror("Params of main must be void or empty");
                         }
                         // CODEGEN generate function beginning
+                        GenCode.genFunBegin(rec);
                         }
                 }
         yysv[yysp-=3] = yyrv;
@@ -3404,7 +3413,8 @@ class Parser implements ParserTokens {
                         // CODEGEN else ok, set "usesRead" to true, generate read
                         else
                         {
-                                
+                                        usesRead = true;
+                                        GenCode.genRead(rec);
                         }
                 }
         yysv[yysp-=6] = yyrv;
@@ -3570,6 +3580,7 @@ class Parser implements ParserTokens {
     private int yyr60() { // print_stmt : print_stmt_start LPAREN expression RPAREN SEMI
         {
                         // CODEGEN generate end print
+                        GenCode.genEndPrint();
                 }
         yysv[yysp-=5] = yyrv;
         return 46;
@@ -3578,6 +3589,7 @@ class Parser implements ParserTokens {
     private int yyr61() { // print_stmt_start : PRINT
         {
                         // CODEGEN generate begin print
+                        GenCode.genBeginPrint();
                 }
         yysv[yysp-=1] = yyrv;
         return 47;
@@ -3608,6 +3620,7 @@ class Parser implements ParserTokens {
                         // SYMTAB enter scope
                         symtab.enterScope();
                         // CODEGEN generate prolog
+                        GenCode.genPrologue();
                 }
         yysv[yysp-=0] = yyrv;
         return 2;
@@ -3809,7 +3822,7 @@ class Parser implements ParserTokens {
                         // CODEGEN else ok, generate store
                         else
                         {
-                                
+                        GenCode.genStore(rec);  
                         }
                 }
         yysv[yysp-=4] = yyrv;
@@ -3838,7 +3851,12 @@ class Parser implements ParserTokens {
                         // SYMTAB got here, so ok, create variable record, insert in symbol table
                                 VarRec rec = new VarRec(name, symtab.getScope(), vartype);
                                 symtab.insert(name, rec);
-                        // CODEGEN and also generate static variable declaration of scope is global (0)
+                        // CODEGEN and also generate static variable declaration if scope is global (0)
+                        if (symtab.getScope() == 0)
+                        {
+                                GenCode.genStaticDecl(rec);
+                        }
+                        
                         }
                 }
         yysv[yysp-=3] = yyrv;
