@@ -76,7 +76,7 @@ multicomment ="/*"((\*+[^/*]) | ([^*]))*\**"*/"
 "<"					{ yyparser.yylval = new ParserVal(LT); return LT; }
 ">"					{ yyparser.yylval = new ParserVal(GT); return GT; }
 "=="                { yyparser.yylval = new ParserVal(EQ); return EQ; }
-"!="                { yyparser.yylval = new ParserVal(NOTEQ); return EQ; }
+"!="                { yyparser.yylval = new ParserVal(NOTEQ); return NOTEQ; }
 
 
 
@@ -85,8 +85,8 @@ multicomment ="/*"((\*+[^/*]) | ([^*]))*\**"*/"
 "*"					{ yyparser.yylval = new ParserVal(MULOP); return MULOP; }
 "/"					{ yyparser.yylval = new ParserVal(DIVOP); return DIVOP; }
 
-"="					{ return ASSIGN; }
 
+"="					{ return ASSIGN; }
 ";"                 { return SEMI; }
 ","                 { return COMMA; }
 

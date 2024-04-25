@@ -854,7 +854,7 @@ class Yylex implements ParserTokens {
             // fall through
           case 52: break;
           case 21:
-            { yyparser.yylval = new ParserVal(NOTEQ); return EQ;
+            { yyparser.yylval = new ParserVal(NOTEQ); return NOTEQ;
             }
             // fall through
           case 53: break;

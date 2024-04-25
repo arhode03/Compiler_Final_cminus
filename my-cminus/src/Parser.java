@@ -1,4 +1,4 @@
-// Output created by jacc on Tue Apr 23 13:57:49 EDT 2024
+// Output created by jacc on Thu Apr 25 13:51:04 EDT 2024
 
 
 import java.io.*;
@@ -2988,6 +2988,7 @@ class Parser implements ParserTokens {
     private int yyr52() { // arr_assign_stmt : arr_assign_stmt_name LBRACK expression RBRACK ASSIGN expression SEMI
         {
                         // CODEGEN generate IA store
+                        GenCode.genIAStore();
                 }
         yysv[yysp-=7] = yyrv;
         return 38;
@@ -3013,7 +3014,7 @@ class Parser implements ParserTokens {
                         // CODEGEN else ok, generate load array address
                         else
                         {
-                                
+                                GenCode.genLoadArrAddr(rec);
                         }
                 }
         yysv[yysp-=1] = yyrv;
@@ -3359,6 +3360,7 @@ class Parser implements ParserTokens {
                         firstSelectionLabels.push(label);
                         
                         // CODEGEN generate fgoto label
+                        GenCode.genFGoto(label);
                 }
         yysv[yysp-=0] = yyrv;
         return 120;
@@ -3372,10 +3374,14 @@ class Parser implements ParserTokens {
                         
                         // CODGEN generate goto label
                         
+                        GenCode.genGoto(label);
+                        
                         // Get the else part label and write before else part
                         label = firstSelectionLabels.pop();
                         
                         // CODEGEN generate label
+                        
+                        GenCode.genLabel(label);
                 }
         yysv[yysp-=0] = yyrv;
         return 128;
@@ -3388,6 +3394,9 @@ class Parser implements ParserTokens {
                         lastIterationLabels.push(label);
                         
                         // CODEGEN generate fgoto label
+                        
+                        GenCode.genFGoto(label);
+                        
                 }
         yysv[yysp-=0] = yyrv;
         return 126;
@@ -3427,11 +3436,17 @@ class Parser implements ParserTokens {
                         String label = firstIterationLabels.pop();
                         
                         // CODEGEN generate goto label
+                        
+                        GenCode.genGoto(label);
+                        
                 
                         // Get the end label and write at end of while statement
                         label = lastIterationLabels.pop();
                         
                         // CODEGEN generate label
+                        
+                        GenCode.genLabel(label);
+                        
                 }
         yysv[yysp-=7] = yyrv;
         return 45;
@@ -3665,6 +3680,8 @@ class Parser implements ParserTokens {
     private int yyr63() { // return_stmt : RETURN SEMI
         {
                         // CODEGEN generate return
+                        GenCode.genReturn();
+                        
                 }
         yysv[yysp-=2] = yyrv;
         return 48;
@@ -3673,6 +3690,7 @@ class Parser implements ParserTokens {
     private int yyr64() { // return_stmt : RETURN expression SEMI
         {
                         // CODEGEN generate I return
+                        GenCode.genIReturn();
                 }
         yysv[yysp-=3] = yyrv;
         return 48;
@@ -3684,6 +3702,7 @@ class Parser implements ParserTokens {
                         String label = lastSelectionLabels.pop();
                         
                         // CODEGEN generate label
+                        GenCode.genLabel(label);
                 }
         yysv[yysp-=9] = yyrv;
         return 49;
@@ -3776,6 +3795,8 @@ class Parser implements ParserTokens {
                         firstIterationLabels.push(label);
                         
                         // CODEGEN generate label
+                        
+                        GenCode.genLabel(label);
                 }
         yysv[yysp-=0] = yyrv;
         return 77;
@@ -3889,6 +3910,15 @@ class Parser implements ParserTokens {
                                 
                         // CODEGEN and also generate static variable declaration of scope is global (0)
                         // CODEGEN or if not global, generate array init for local variable
+                        
+                        if (symtab.getScope() == 0)
+                        {
+                                GenCode.genStaticDecl(rec);
+                        }
+                        else
+                        {
+                                GenCode.genArrInit(rec);
+                        }
                         }
                 }
         yysv[yysp-=6] = yyrv;
