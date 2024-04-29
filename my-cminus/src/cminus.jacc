@@ -232,8 +232,9 @@ fun_params:  LPAREN params RPAREN
 				semerror("Params of main must be void or empty");
 			}
 			// CODEGEN generate function beginning
-			GenCode.genFunBegin(rec);
+			
 			}
+			GenCode.genFunBegin(rec);
 		}
 	;
 
@@ -299,6 +300,7 @@ param:		type_specifier IDENTIFIER
 			}
 			
 			// SYMTAB return it as a ParserVal via $$ return value
+			$$ = new ParserVal(rec);
 		}
 		|	type_specifier IDENTIFIER LBRACK RBRACK
 		{
@@ -321,6 +323,7 @@ param:		type_specifier IDENTIFIER
 				symtab.insert(name, rec);
 			}
 			// SYMTAB return it as a ParserVal via $$ return value
+			$$ = new ParserVal(rec);
 		}
 	;
 
@@ -609,7 +612,7 @@ expression:	additive_expression relop additive_expression
 additive_expression: additive_expression addop term
 		{
 			// CODEGEN generate arithmetic oper
-			int addopval = $2.ival
+			int addopval = $2.ival;
 			GenCode.genArithOper(addopval);
 		}
 		|	term
@@ -640,14 +643,14 @@ factor:		LPAREN expression RPAREN
 			{
 			// CODEGEN else if it IS a regular variable, generate load var
 				GenCode.genLoadVar(rec);
-			
+			}
 			// CODEGEN else (it's an array variable), generate load array address
 			
 				else 
 				{
 				 GenCode.genLoadArrAddr(rec); 
 				}
-			}
+			
 		}
 		| 	arr_factor
 		| 	call 
