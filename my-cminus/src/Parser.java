@@ -1,4 +1,4 @@
-// Output created by jacc on Thu Apr 25 13:51:04 EDT 2024
+// Output created by jacc on Mon Apr 29 18:36:34 EDT 2024
 
 
 import java.io.*;
@@ -2955,14 +2955,12 @@ class Parser implements ParserTokens {
     }
 
     private int yyr45() { // addop : ADDOP
-        {yyrv = yysv[yysp-1];}
-        yysv[yysp-=1] = yyrv;
+        yysp -= 1;
         return 88;
     }
 
     private int yyr46() { // addop : SUBOP
-        {yyrv = yysv[yysp-1];}
-        yysv[yysp-=1] = yyrv;
+        yysp -= 1;
         return 88;
     }
 
@@ -3024,6 +3022,7 @@ class Parser implements ParserTokens {
     private int yyr74() { // arr_factor : arr_factor_name LBRACK expression RBRACK
         {
                         // CODEGEN generate IA load
+                        GenCode.genIALoad();
                 }
         yysv[yysp-=4] = yyrv;
         return 66;
@@ -3050,7 +3049,7 @@ class Parser implements ParserTokens {
                         // CODEGEN else ok, generate load array address
                         else
                         {
-                                
+                                GenCode.genLoadArrAddr(rec);
                         }
                 }
         yysv[yysp-=1] = yyrv;
@@ -3089,7 +3088,7 @@ class Parser implements ParserTokens {
                         // CODEGEN else ok, generate function call
                         else
                         {
-                                
+                                GenCode.genFunCall(rec);
                         }
                 }
         yysv[yysp-=4] = yyrv;
@@ -3167,8 +3166,11 @@ class Parser implements ParserTokens {
     private int yyr65() { // expression : additive_expression relop additive_expression
         {
                         // CODEGEN get value of relational op from item 2 of rule
+                        int relopval = yysv[yysp-2].ival;
 
                         // CODEGEN generate relational oper
+                        
+                        GenCode.genRelOper(relopval);
                 }
         yysv[yysp-=3] = yyrv;
         return yypexpression();
@@ -3222,9 +3224,14 @@ class Parser implements ParserTokens {
                         {
                         // CODEGEN else if it IS a regular variable, generate load var
                                 GenCode.genLoadVar(rec);
-                        
-                        // CODEGEN else (it's an array variable), generate load array address
                         }
+                        // CODEGEN else (it's an array variable), generate load array address
+                        
+                                else 
+                                {
+                                 GenCode.genLoadArrAddr(rec); 
+                                }
+                        
                 }
         yysv[yysp-=1] = yyrv;
         return yypfactor();
@@ -3243,6 +3250,8 @@ class Parser implements ParserTokens {
     private int yyr73() { // factor : NUMBER
         {
                         // CODEGEN generate load constant
+                        int value = yysv[yysp-1].ival;
+                        GenCode.genLoadConst(value);
                 }
         yysv[yysp-=1] = yyrv;
         return yypfactor();
@@ -3346,8 +3355,9 @@ class Parser implements ParserTokens {
                                 semerror("Params of main must be void or empty");
                         }
                         // CODEGEN generate function beginning
-                        GenCode.genFunBegin(rec);
+                        
                         }
+                        GenCode.genFunBegin(rec);
                 }
         yysv[yysp-=3] = yyrv;
         return 12;
@@ -3462,14 +3472,12 @@ class Parser implements ParserTokens {
     }
 
     private int yyr49() { // mulop : MULOP
-        {yyrv = yysv[yysp-1];}
-        yysv[yysp-=1] = yyrv;
+        yysp -= 1;
         return 98;
     }
 
     private int yyr50() { // mulop : DIVOP
-        {yyrv = yysv[yysp-1];}
-        yysv[yysp-=1] = yyrv;
+        yysp -= 1;
         return 98;
     }
 
@@ -3495,6 +3503,7 @@ class Parser implements ParserTokens {
                         }
                         
                         // SYMTAB return it as a ParserVal via yyrv return value
+                        yyrv = new ParserVal(rec);
                 }
         yysv[yysp-=2] = yyrv;
         return yypparam();
@@ -3521,6 +3530,7 @@ class Parser implements ParserTokens {
                                 symtab.insert(name, rec);
                         }
                         // SYMTAB return it as a ParserVal via yyrv return value
+                        yyrv = new ParserVal(rec);
                 }
         yysv[yysp-=4] = yyrv;
         return yypparam();
@@ -3613,6 +3623,8 @@ class Parser implements ParserTokens {
     private int yyr67() { // additive_expression : additive_expression addop term
         {
                         // CODEGEN generate arithmetic oper
+                        int addopval = yysv[yysp-2].ival;
+                        GenCode.genArithOper(addopval);
                 }
         yysv[yysp-=3] = yyrv;
         return yypadditive_expression();
@@ -3642,38 +3654,32 @@ class Parser implements ParserTokens {
     }
 
     private int yyr39() { // relop : LTE
-        {yyrv = yysv[yysp-1];}
-        yysv[yysp-=1] = yyrv;
+        yysp -= 1;
         return 89;
     }
 
     private int yyr40() { // relop : LT
-        {yyrv = yysv[yysp-1];}
-        yysv[yysp-=1] = yyrv;
+        yysp -= 1;
         return 89;
     }
 
     private int yyr41() { // relop : GT
-        {yyrv = yysv[yysp-1];}
-        yysv[yysp-=1] = yyrv;
+        yysp -= 1;
         return 89;
     }
 
     private int yyr42() { // relop : GTE
-        {yyrv = yysv[yysp-1];}
-        yysv[yysp-=1] = yyrv;
+        yysp -= 1;
         return 89;
     }
 
     private int yyr43() { // relop : EQ
-        {yyrv = yysv[yysp-1];}
-        yysv[yysp-=1] = yyrv;
+        yysp -= 1;
         return 89;
     }
 
     private int yyr44() { // relop : NOTEQ
-        {yyrv = yysv[yysp-1];}
-        yysv[yysp-=1] = yyrv;
+        yysp -= 1;
         return 89;
     }
 
@@ -3772,7 +3778,11 @@ class Parser implements ParserTokens {
     }
 
     private int yyr47() { // term : term mulop factor
-        yysp -= 3;
+        {
+                int mulopval = yysv[yysp-2].ival;
+                GenCode.genArithOper(mulopval); //something is wrong here
+        }
+        yysv[yysp-=3] = yyrv;
         return yypterm();
     }
 

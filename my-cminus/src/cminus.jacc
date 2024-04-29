@@ -376,28 +376,28 @@ assign_stmt:  var_assign_stmt
 		| arr_assign_stmt
 	;
 
-relop:  LTE {$$ = $1;}
-		| LT {$$ = $1;}
-		| GT {$$ = $1;}
-		| GTE {$$ = $1;}
-		| EQ {$$ = $1;}
-		| NOTEQ {$$ = $1;}
+relop:  LTE 
+		| LT
+		| GT
+		| GTE
+		| EQ
+		| NOTEQ
 	;
 
-addop:  ADDOP {$$ = $1;}
-		| SUBOP {$$ = $1;}
+addop:  ADDOP
+		| SUBOP
 	;
 
 term:  term mulop factor 
 	{
 		int mulopval = $2.ival;
 		GenCode.genArithOper(mulopval); //something is wrong here
-		| factor
 	}
+	| factor
 	;
 
-mulop:  MULOP {$$ = $1;}
-		| DIVOP {$$ = $1;}
+mulop:  MULOP
+		| DIVOP
 	;
 	
 
